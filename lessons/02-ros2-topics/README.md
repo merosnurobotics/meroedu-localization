@@ -2,7 +2,7 @@
 
 작성자: 조연우 · yencho929@snu.ac.kr
 
-01의 계산 함수를 그대로 불러와 ROS node로 감쌉니다. ddonggae의 `arena_control_node.py`에서 scan 구독, 최신 입력 우선 처리, 결과 발행 구조를 참고했습니다. 원본은 `/laser_scan`을 읽고 `/arena_lightweight/status`에 `std_msgs/String` JSON을 발행합니다. 교육 예제는 위치와 점수만 별도 표준 메시지로 내보냅니다. 원본 상태 토픽과 같은 형식은 아닙니다.
+01의 계산 함수를 불러와 ROS node로 감쌉니다. `/meroedu/scan`을 구독해 최신 scan에서 위치를 계산하고, `/meroedu/pose`에 PoseStamped, `/meroedu/match_score`에 Float64를 발행합니다. 아래 순서대로 환경을 준비하고 세 터미널에서 실행합니다.
 
 ## 환경
 
@@ -85,7 +85,7 @@ ros2 topic echo /laser_scan --once --qos-reliability best_effort
 /usr/bin/python3 localization_node.py --ros-args -p scan_topic:=/laser_scan -p known_yaw:=0.0
 ```
 
-`/laser_scan`은 ddonggae 원본의 기본값입니다. 장치가 `/scan`을 내보내면 그 이름을 입력합니다. `known_yaw=0.0`은 지도 +x 방향을 보는 센서를 고정한 경우만 맞습니다. 초기 yaw를 실제 장면에 맞추고, 센서 중심=로봇 중심/정면 일치/같은 방 크기 가정을 먼저 확인합니다. 센서를 회전시켜도 yaw가 자동 추정되지 않습니다. IMU 결합은 01의 심화 discussion에서만 다룹니다.
+`/laser_scan`은 센서 입력 이름의 예시입니다. 장치가 `/scan`을 내보내면 그 이름을 입력합니다. `known_yaw=0.0`은 지도 +x 방향을 보는 센서를 고정한 경우만 맞습니다. 초기 yaw를 실제 장면에 맞추고, 센서 중심=로봇 중심/정면 일치/같은 방 크기 가정을 먼저 확인합니다. 센서를 회전시켜도 yaw가 자동 추정되지 않습니다. IMU 결합은 01의 심화 discussion에서만 다룹니다.
 
 이 코드는 TF broadcast, Nav2 연결, 모터 제어를 하지 않습니다. RViz에서 Pose를 보고 싶다면 Fixed Frame을 `map`으로 설정하고 Pose display에 `/meroedu/pose`를 지정합니다. LaserScan을 같은 화면에 겹치려면 올바른 시간의 `map → laser` TF가 추가로 필요합니다. 잘못된 정적 TF로 움직이는 센서를 고정하지 마세요.
 
@@ -102,6 +102,6 @@ ROS_DOMAIN_ID=169 /usr/bin/python3 test_ros2.py
 
 ## 출처
 
-- [ddonggae node](https://github.com/YenCho/ddonggae/blob/d85758c752e6cd3244e16d9ea4a3d2831da225b4/navigation/ros2/arena_lightweight_control/arena_lightweight_control/arena_control_node.py)
+- [코드 출처·라이선스 기록](../../UPSTREAM.md)
 - [ROS publisher/subscriber tutorial](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html)
 - [ROS QoS](https://docs.ros.org/en/humble/Concepts/Intermediate/About-Quality-of-Service-Settings.html)

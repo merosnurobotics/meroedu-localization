@@ -4,7 +4,7 @@
 
 로봇 위치를 알아내는 것과 객체 위치를 알아내는 것은 다른 문제입니다. 이 실습은 객체 segmentation mask와 같은 픽셀에 aligned된 depth, 카메라 파라미터, 촬영 당시 로봇 pose를 사용해 객체의 관측점을 지도에 올립니다.
 
-ddonggae의 `mission/match_runner.py`의 `mask_bottom_uv`, `robust_depth_median`, `pixel_depth_to_robot_xy`, `to_map`을 참고했습니다. 원본의 두 카메라 stitch, 여러 모델, 경기장 격자 투표·이동 코드는 포함하지 않습니다. 한 카메라의 원본 좌표에서 geometry만 이해합니다.
+한 카메라의 원본 RGB 좌표에 놓인 객체별 mask와 aligned depth를 입력합니다. 하단 대표 픽셀의 깊이로 카메라 기준 관측점을 구하고, 장착 변환과 로봇 pose를 적용합니다. 아래 입력 형식과 코드 읽는 순서에 따라 실행합니다.
 
 ## 시작
 
@@ -50,13 +50,13 @@ mask와 depth의 크기가 같아도 정렬됐다는 증거가 아닙니다. 반
 
 ## 단계
 
-1. Mask의 가장 아래쪽 두 행에서 평균 u와 최하단 v를 고릅니다. ddonggae의 하단 대표 픽셀 방식입니다. 숨겨진 바닥 접점이 보이는 것처럼 가정하지 않습니다.
+1. Mask의 가장 아래쪽 두 행에서 평균 u와 최하단 v를 고릅니다. 하단의 대표 관측점을 선택하는 방식입니다. 숨겨진 바닥 접점이 보이는 것처럼 가정하지 않습니다.
 2. 주변 작은 패치의 유효 depth 중앙값을 구합니다. 교육 코드는 mask 밖 배경도 제외합니다. 0/NaN/inf/범위 밖 값과 유효 샘플 3개 미만은 거부합니다. mask 내부 경계 픽셀에도 혼합 depth가 생길 수 있어 실제 장면에서 확인해야 합니다.
 3. `X=(u-cx)*Z/fx`, `Y=(v-cy)*Z/fy`, `Z=depth_m`으로 카메라 optical 좌표를 구합니다. Z는 광축 깊이이며 직선 거리 `sqrt(X²+Y²+Z²)`와 다릅니다.
 4. 카메라 장착 위치와 아래쪽 pitch를 반영해 로봇 좌표로 옮깁니다.
 5. 촬영 당시 로봇 yaw로 회전하고 로봇 지도 x/y를 더합니다.
 
-카메라 축은 x=오른쪽, y=아래, z=앞. 로봇 축은 x=앞, y=왼쪽, z=위입니다. ddonggae 원본 중간 표현의 `(x_right, y_forward)`를 이 교육 코드에서는 `(x_forward, y_left, z_up)`로 정리했습니다. 이름만 바꾼 것이 아니라 부호와 변환식도 함께 바꿨습니다.
+카메라 축은 x=오른쪽, y=아래, z=앞. 로봇 축은 x=앞, y=왼쪽, z=위입니다. 이 코드의 robot 좌표는 `(x_forward, y_left, z_up)`입니다. 카메라 정면이 로봇 정면과 일치하면 카메라의 오른쪽 x는 로봇의 왼쪽 y의 음수 방향입니다.
 
 ## 단순화한 가정
 
@@ -69,16 +69,15 @@ mask와 depth의 크기가 같아도 정렬됐다는 증거가 아닙니다. 반
 
 이 강의는 모델 학습이나 RealSense 드라이버를 포함하지 않습니다. 객체인식 강의에서 학습한 segmentation 모델로 객체별 mask를 준비합니다. RealSense라면 SDK의 `align`으로 depth를 RGB에 맞추고, 그 aligned 이미지에 대응하는 intrinsics와 장치 depth scale을 읽습니다. raw uint16을 무조건 mm라고 가정하지 마세요.
 
-이미지가 stitch된 경우 원본 카메라와 원본 픽셀로 되돌려야 합니다. ddonggae의 `stitcher.to_source()`가 이 역할을 했습니다. 여러 카메라를 합친 가상 화면의 좌표에 한 카메라의 fx/fy를 바로 대입하면 안 됩니다.
+이미지가 stitch된 경우 원본 카메라와 원본 픽셀로 되돌려야 합니다. 합친 화면에서 검출했다면 사용한 stitch 변환의 역변환으로 원본 카메라와 픽셀을 찾아야 합니다. 첫 실습에서는 이 단계를 피하도록 원본 RGB 하나를 사용합니다. 여러 카메라를 합친 가상 화면의 좌표에 한 카메라의 fx/fy를 바로 대입하면 안 됩니다.
 
-예제 JSON의 `intrinsics`/`mount`/`robot_pose`는 모두 설명용입니다. 그대로 실물에 사용하지 않습니다. 객체마다 관측점을 구하고 label과 함께 저장하면 간단한 object map이 됩니다. 같은 객체의 반복 관측을 합치는 data association이나 경기장 grid snapping은 별도 단계입니다. 원본의 격자 투표 규칙을 일반적인 객체 위치 측정에 강제로 넣지 않습니다.
+예제 JSON의 `intrinsics`/`mount`/`robot_pose`는 모두 설명용입니다. 그대로 실물에 사용하지 않습니다. 객체마다 관측점을 구하고 label과 함께 저장하면 간단한 object map이 됩니다. 같은 객체의 반복 관측을 합치는 data association이나 경기장 grid snapping은 별도 단계입니다. 정해진 격자를 사용하는 경우에도 객체가 그 격자에 놓인다는 가정과 허용 오차를 먼저 확인합니다.
 
 ## 검증
 
 `python3 test_geometry.py`: 광축 좌표/로봇 축, 90° 지도 회전과 평행이동, 카메라 pitch/height, 배경·무효 depth 제외, 입력 크기·intrinsics 검사, 전체 합성 흐름을 확인합니다. 실물 좌표 정확도·카메라 연결·모델 성능은 이 테스트의 검증 범위가 아닙니다.
 
-## 원본
+## 참고 자료
 
-- [ddonggae perception pipeline §7](https://github.com/YenCho/ddonggae/blob/d85758c752e6cd3244e16d9ea4a3d2831da225b4/perception/docs/pipeline.md#7-depth-back-projection-to-a-3d-target)
-- [ddonggae match_runner](https://github.com/YenCho/ddonggae/blob/d85758c752e6cd3244e16d9ea4a3d2831da225b4/mission/match_runner.py)
+- [코드 출처·라이선스 기록](../../UPSTREAM.md)
 - [ROS 좌표 규약 REP 103](https://www.ros.org/reps/rep-0103.html)

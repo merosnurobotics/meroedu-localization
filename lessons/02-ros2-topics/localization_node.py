@@ -22,7 +22,7 @@ class LocalizationNode(Node):
         self.declare_parameter('max_scan_age_sec', 1.0)
         self.declare_parameter('max_score_m', 0.15)
         self.latest_scan = None
-        # Like ddonggae: keep the newest scan instead of building a backlog.
+        # Keep the newest scan instead of building a backlog.
         scan_qos = QoSProfile(history=HistoryPolicy.KEEP_LAST, depth=1,
                              reliability=ReliabilityPolicy.BEST_EFFORT,
                              durability=DurabilityPolicy.VOLATILE)

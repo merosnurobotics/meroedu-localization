@@ -1,5 +1,5 @@
 """Mask + aligned depth -> visible surface point -> robot -> map.
-Adapted from ddonggae's depth path (Team 14, MIT), using ROS axis names.
+Uses ROS axis names. Third-party provenance: ../../UPSTREAM.md (Team 14, MIT).
 Pinhole model: input pixels must be rectified, with matching intrinsics.
 """
 import math
@@ -37,7 +37,7 @@ def image_shape(image):
 
 
 def mask_bottom_pixel(mask):
-    """Mean u in the bottom two mask rows, and the lowest v, like ddonggae."""
+    """Mean u in the bottom two mask rows, and the lowest v."""
     image_shape(mask)
     pixels = [(u, v) for v, row in enumerate(mask) for u, value in enumerate(row) if value]
     if not pixels:
