@@ -4,7 +4,7 @@
 
 | 순서 | 강의 | 실습 폴더 | 설명 자료 |
 | --- | --- | --- | --- |
-| 01 | LiDAR 사용 | [lessons/01-lidar](lessons/01-lidar/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/localization/lidar) · 사이트 회원 로그인 필요 |
+| 01 | LiDAR 사용 | [lessons/01-lidar](lessons/01-lidar/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/localization/lidar) |
 
 ## 시작하기
 
@@ -13,7 +13,7 @@ git clone https://github.com/merosnurobotics/meroedu-localization.git
 cd meroedu-localization/lessons/01-lidar
 ```
 
-강의 폴더의 README를 따라갑니다. 웹사이트 강의는 회원 전용이며 이 코드 저장소는 공개입니다.
+강의 폴더의 README를 따라갑니다. 웹사이트 강의와 이 코드 저장소는 모두 공개입니다.
 
 ## 새 강의 추가
 
