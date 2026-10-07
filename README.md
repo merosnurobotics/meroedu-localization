@@ -5,7 +5,7 @@
 | 순서 | 강의 | 실습 폴더 | 설명 자료 |
 | --- | --- | --- | --- |
 | 01 | LiDAR 사용 | [lessons/01-lidar](lessons/01-lidar/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/localization/lidar) |
-| 02 | ROS 2 토픽으로 내보내기 | [lessons/02-ros2-topics](lessons/02-ros2-topics/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/localization/ros2-topics) |
+| 02 | ROS 2 토픽으로 내보내기 | [lessons/02-ros2-topics](lessons/02-ros2-topics/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/ros/localization-topics) |
 | 03 | 객체 localization | [lessons/03-object-localization](lessons/03-object-localization/README.md) | [MERO 교육 자료](https://mero-website-one.vercel.app/education/localization/object-localization) |
 
 ## 시작하기
